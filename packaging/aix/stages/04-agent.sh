@@ -44,8 +44,8 @@ fi
 cleanup() {
     if [ $? -ne 0 ]; then
         log "ERROR: $STAGE_NAME failed. Removing partial outputs."
-        rm -f "$STAGING/opt/datadog-agent/bin/agent"
-        rm -f "$STAGING/opt/datadog-agent/bin/trace-agent"
+        rm -rf "$STAGING/opt/datadog-agent/bin/agent"
+        rm -f "$STAGING/opt/datadog-agent/embedded/bin/trace-agent"
     fi
 }
 trap cleanup EXIT
@@ -53,7 +53,7 @@ trap cleanup EXIT
 # ─── Step 1: Create output directory ──────────────────────────────────────────
 
 log "Creating staging bin directory"
-mkdir -p "$STAGING/opt/datadog-agent/bin"
+mkdir -p "$STAGING/opt/datadog-agent/bin/agent"
 
 # ─── Step 2: Set rtloader CGO flags ───────────────────────────────────────────
 #
@@ -103,25 +103,20 @@ log "Building agent version $AGENT_VERSION at commit $COMMIT"
 # ─── Step 4: Build the agent binary ───────────────────────────────────────────
 #
 # Build tags and ldflags are determined by inv agent.build (tasks/build_tags.py).
-#
-# --python-home-3 must be set explicitly because on AIX the binary lives at
-# bin/agent (one level shallower than bin/agent/agent on Linux), so the default
-# relative path calculation resolves to /opt/embedded which does not exist.
 
 log "Building agent binary via inv agent.build"
 cd /opt/datadog-agent
-rm -f "$STAGING/opt/datadog-agent/bin/agent"
+rm -f "$STAGING/opt/datadog-agent/bin/agent/agent"
 python3.12 -m invoke agent.build \
     --rebuild \
     --skip-assets \
     --exclude-rtloader \
     --rtloader-root=/opt/datadog-agent/rtloader \
     --embedded-path="$EMBEDDED_DESTDIR" \
-    --python-home-3="$EMBEDDED" \
-    --agent-bin="$STAGING/opt/datadog-agent/bin/agent"
+    --agent-bin="$STAGING/opt/datadog-agent/bin/agent/agent"
 
-strip -X64 "$STAGING/opt/datadog-agent/bin/agent"
-log "agent binary build complete: $STAGING/opt/datadog-agent/bin/agent"
+strip -X64 "$STAGING/opt/datadog-agent/bin/agent/agent"
+log "agent binary build complete: $STAGING/opt/datadog-agent/bin/agent/agent"
 
 # ─── Step 5: Build the trace-agent binary ─────────────────────────────────────
 #
@@ -130,10 +125,11 @@ log "agent binary build complete: $STAGING/opt/datadog-agent/bin/agent"
 log "Building trace-agent binary via inv trace-agent.build"
 cd /opt/datadog-agent
 python3.12 -m invoke trace-agent.build --rebuild
-rm -f "$STAGING/opt/datadog-agent/bin/trace-agent"
-cp /opt/datadog-agent/bin/trace-agent/trace-agent "$STAGING/opt/datadog-agent/bin/trace-agent"
-strip -X64 "$STAGING/opt/datadog-agent/bin/trace-agent"
-log "trace-agent binary build complete: $STAGING/opt/datadog-agent/bin/trace-agent"
+mkdir -p "$STAGING/opt/datadog-agent/embedded/bin"
+rm -f "$STAGING/opt/datadog-agent/embedded/bin/trace-agent"
+cp /opt/datadog-agent/bin/trace-agent/trace-agent "$STAGING/opt/datadog-agent/embedded/bin/trace-agent"
+strip -X64 "$STAGING/opt/datadog-agent/embedded/bin/trace-agent"
+log "trace-agent binary build complete: $STAGING/opt/datadog-agent/embedded/bin/trace-agent"
 
 # ─── Step 6: Verify XCOFF64 magic bytes ───────────────────────────────────────
 #
@@ -141,7 +137,7 @@ log "trace-agent binary build complete: $STAGING/opt/datadog-agent/bin/trace-age
 # would indicate a cross-compile or wrong-format build.
 
 log "Verifying agent binary is XCOFF64"
-MAGIC=$(od -A x -t x1 "$STAGING/opt/datadog-agent/bin/agent" | head -1 | awk '{print $2 $3}')
+MAGIC=$(od -A x -t x1 "$STAGING/opt/datadog-agent/bin/agent/agent" | head -1 | awk '{print $2 $3}')
 if [ "$MAGIC" != "01f7" ]; then
     log "ERROR: agent binary is not XCOFF64 (got: $MAGIC)"
     log "       Expected magic bytes: 01 f7"
@@ -151,7 +147,7 @@ fi
 log "XCOFF64 magic verified for agent binary (magic: $MAGIC)"
 
 log "Verifying trace-agent binary is XCOFF64"
-MAGIC=$(od -A x -t x1 "$STAGING/opt/datadog-agent/bin/trace-agent" | head -1 | awk '{print $2 $3}')
+MAGIC=$(od -A x -t x1 "$STAGING/opt/datadog-agent/embedded/bin/trace-agent" | head -1 | awk '{print $2 $3}')
 if [ "$MAGIC" != "01f7" ]; then
     log "ERROR: trace-agent binary is not XCOFF64 (got: $MAGIC)"
     log "       Expected magic bytes: 01 f7"
