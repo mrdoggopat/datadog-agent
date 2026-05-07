@@ -1,21 +1,6 @@
-module github.com/DataDog/datadog-agent/pkg/util/utilizationtracker
+module github.com/DataDog/datadog-agent/pkg/util/hostport
 
 go 1.25.0
-
-require (
-	github.com/benbjohnson/clock v1.3.5
-	github.com/stretchr/testify v1.11.1
-)
-
-require gopkg.in/yaml.v3 v3.0.1 // indirect
-
-require (
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/kr/pretty v0.3.1 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/rogpeppe/go-internal v1.14.1 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-)
 
 // This section was automatically added by 'dda inv modules.add-all-replace' command, do not edit manually
 
@@ -169,7 +154,6 @@ replace (
 	github.com/DataDog/datadog-agent/pkg/util/grpc => ../../../pkg/util/grpc
 	github.com/DataDog/datadog-agent/pkg/util/hostinfo => ../../../pkg/util/hostinfo
 	github.com/DataDog/datadog-agent/pkg/util/hostname/validate => ../../../pkg/util/hostname/validate
-	github.com/DataDog/datadog-agent/pkg/util/hostport => ../../../pkg/util/hostport
 	github.com/DataDog/datadog-agent/pkg/util/http => ../../../pkg/util/http
 	github.com/DataDog/datadog-agent/pkg/util/json => ../../../pkg/util/json
 	github.com/DataDog/datadog-agent/pkg/util/jsonquery => ../../../pkg/util/jsonquery
@@ -188,6 +172,7 @@ replace (
 	github.com/DataDog/datadog-agent/pkg/util/statstracker => ../../../pkg/util/statstracker
 	github.com/DataDog/datadog-agent/pkg/util/system => ../../../pkg/util/system
 	github.com/DataDog/datadog-agent/pkg/util/testutil => ../../../pkg/util/testutil
+	github.com/DataDog/datadog-agent/pkg/util/utilizationtracker => ../../../pkg/util/utilizationtracker
 	github.com/DataDog/datadog-agent/pkg/util/uuid => ../../../pkg/util/uuid
 	github.com/DataDog/datadog-agent/pkg/util/winutil => ../../../pkg/util/winutil
 	github.com/DataDog/datadog-agent/pkg/version => ../../../pkg/version
