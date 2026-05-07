@@ -333,6 +333,14 @@ func (p *FileProvider) filesMatchingSource(source *sources.LogSource) ([]*tailer
 	files := make([]*tailer.File, 0, len(paths))
 	for _, path := range paths {
 		if excludedPaths[path] == 0 {
+			if _, err := os.Stat(path); err != nil {
+				if linkInfo, linkErr := os.Lstat(path); linkErr == nil && linkInfo.Mode()&os.ModeSymlink != 0 {
+					log.Warnf("Skipping dangling symlink %s: %v", path, err)
+				} else {
+					log.Errorf("Skipping inaccessible file %s: %v", path, err)
+				}
+				continue
+			}
 			files = append(files, tailer.NewFile(path, source, true))
 		}
 	}
